@@ -1,0 +1,33 @@
+# Local dependencies, environments and bytecode
+.deps/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Test samples, project credentials and local build state
+tests/.runs/
+remote-build.ps1
+*-command.ps1
+!templates/project-command.ps1
+*.local.ps1
+.env
+.env.*
+.vivado_ssh_latest.json
+.vivado-ssh-owner
+manifest.json
+
+# Vivado and downloaded outputs
+.Xil/
+*.runs/
+*.cache/
+*.gen/
+*.bit
+*.ltx
+*.dcp
+*.log
+*.jou
+*.partial
+results/
+output/
+jobs/

@@ -71,7 +71,17 @@ python -m pip install --target .deps -r requirements.txt
 
 所有工程输入须位于 `LocalProjectRoot` 内，不允许 `..` 或目录外引用。共用源码时，请选择共同上级目录为根目录。上传某个目录不会自动把其中全部文件加入 Vivado 编译，仍需准确填写 `SourceFiles`。
 
-本工具不直接打开 Windows XPR。服务器依据清单重建工程，避免 Windows 盘符和本地缓存路径问题。IP 配置脚本应能在 Linux 新工程中执行，不依赖固定 Windows 路径。
+模板每次执行前读取 `$XprPath` 指定的已保存 XPR（默认 `project/project.xpr`），自动更新顶层、器件、`sources_1` 源码和 `constrs_1` 约束清单。在 Vivado 中修改后，先保存工程；未保存的界面状态不会被读取。
+
+```powershell
+.\remote-build.ps1 -Preview  # 仅检查本地 XPR 并显示清单，不连接 SSH
+```
+
+`$XprPath` 设为 `''` 可继续手工配置。XPR 模式会覆盖 `Part`、`TopModule`、`SourceFiles`、`ConstraintFiles`。输入必须位于 `LocalProjectRoot` 内；缺失文件、未知路径变量和不支持的类型会报错。仿真专用及已禁用文件不会加入清单。
+
+服务器依据清单重建工程，不直接打开 Windows XPR。引用的 standalone `.xci` 会上传，由服务器读取并重新生成 IP HDL；不要再用 `IpSetupTcl` 创建同名 IP。外部 COE/MEM、头文件等间接依赖仍需通过 `ExtraUploadPaths`、`IncludeDirs` 明确配置。
+
+当前只支持默认 `sources_1`、`constrs_1`；不会完整复制 run strategy、hook 或全部文件属性。自定义 HDL 库、带作用范围的约束、XPR 宏和 include 配置会拒绝读取，需要进一步支持。约束仍统一设置为 LATE；BD 不支持。IP 脚本需能在 Linux 新工程执行，不依赖 Windows 路径。
 
 ## 使用
 

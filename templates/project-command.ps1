@@ -2,13 +2,16 @@
     [ValidateSet('check', 'submit', 'submit_start', 'status', 'fetch')]
     [string]$Action = 'check',
     [string]$JobId = '',
-    [switch]$ForceUpload
+    [switch]$ForceUpload,
+    [switch]$Preview
 )
 $ErrorActionPreference = 'Stop'
 # Copy this file into YOUR project, then edit this section.
 # Empty Password uses your existing SSH key/agent/config. Password may be stored below if desired; keep this file local.
 $ToolRoot = 'D:\tools\vivado-ssh-build'
 $Python = 'python'
+# Saved XPR to read before each action. Set to '' for manual configuration.
+$XprPath = Join-Path $PSScriptRoot 'project/project.xpr'
 $Config = @{
     SshTarget = 'REPLACE_ME'                 # SSH alias or user@host
     SshPort = 22
@@ -33,6 +36,16 @@ $Config = @{
     ForceUpload = [bool]$ForceUpload
 }
 # Do not change the launcher below unless customizing the tool.
+if ($XprPath) {
+    . (Join-Path $ToolRoot 'read_xpr_config.ps1')
+    Read-XprConfig -XprPath $XprPath -Config $Config
+}
+Write-Host ("Build: top={0}; part={1}; sources={2}; constraints={3}" -f $Config.TopModule, $Config.Part, $Config.SourceFiles.Count, $Config.ConstraintFiles.Count)
+if ($Preview) {
+    # Explicit allowlist: never print authentication fields.
+    [ordered]@{ TopModule=$Config.TopModule; Part=$Config.Part; SourceFiles=@($Config.SourceFiles); ConstraintFiles=@($Config.ConstraintFiles) } | ConvertTo-Json -Depth 4
+    return
+}
 if ($Config.SshTarget -eq 'REPLACE_ME') { throw 'Edit SshTarget and the project settings first.' }
 $env:PYTHONDONTWRITEBYTECODE = '1'
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)

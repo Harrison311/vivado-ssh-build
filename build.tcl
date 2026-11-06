@@ -14,7 +14,18 @@ set code [catch {
     create_project build [file join [pwd] project] -part $part
     set_property target_language Verilog [current_project]
     foreach script $ip_scripts { source $script }
-    add_files -norecurse $rtl_files
+    # Import saved standalone IP configurations and regenerate them remotely.
+    # Do not also recreate these same IPs in IpSetupTcl.
+    set non_ip_files [list]
+    foreach input $rtl_files {
+        if {[string equal -nocase [file extension $input] .xci]} {
+            read_ip $input
+            set_property GENERATE_SYNTH_CHECKPOINT false [get_files [list $input]]
+        } else {
+            lappend non_ip_files $input
+        }
+    }
+    if {[llength $non_ip_files]} { add_files -norecurse $non_ip_files }
     if {[llength $include_dirs]} {
         set_property include_dirs $include_dirs [get_filesets sources_1]
     }
